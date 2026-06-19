@@ -100,18 +100,18 @@ class Game {
 }
 
 class Stage {
+    game = null;
+    _entityList = [];
+    _needReorder = false;
     constructor() {
     }
-    get loop() {
-        return this._loop;
-    }
-    _loop(_delta) {
-        this.update(_delta);
+    loop(delta) {
+        this.update(delta);
         if (this._needReorder) {
             this._entityList = this._entityList.sort((a, b) => (a.z > b.z) ? 1 : -1);
         }
         this._entityList.forEach(e => {
-            e.loop(_delta);
+            e.loop(delta);
         });
         if (this.game.debug) {
             const ctx = this.game.ctx;
@@ -126,7 +126,7 @@ class Stage {
             });
         }
     }
-    update(_delta) {
+    update(delta) {
     }
     add(e) {
         this._entityList.push(e);
@@ -136,12 +136,9 @@ class Stage {
     remove(e) {
         this._entityList = this._entityList.filter(c => c != e);
     }
-    _entityList = [];
     get entityList() {
         return this._entityList;
     }
-    game = null;
-    _needReorder = false;
     reorderZ() {
         this._needReorder = true;
     }
@@ -152,14 +149,11 @@ class Entity {
         this.x = x;
         this.y = y;
     }
-    get loop() {
-        return this._loop;
-    }
-    _loop(_delta) {
+    loop(delta) {
         this.sprite?.render();
-        this.update(_delta);
+        this.update(delta);
     }
-    update(_delta) {
+    update(delta) {
     }
     _sprite;
     set sprite(s) {
@@ -443,4 +437,38 @@ class Sprite {
     scaleY = 1;
 }
 
-export { Entity, Game, Input, Sprite, Stage };
+class Asset {
+    /**
+     * @property {AssetItem[]} list of loaded assets
+     * */
+    assetList = [];
+    /**
+     * Load assets to client
+     * @param {AssetItem | AssetItem[]} asset - asset to be loaded;
+     * @param {function} callback - called when loading is finished or interupted
+     * */
+    static load1(asset, callback) {
+        asset = Array.isArray(asset) ? asset : [asset];
+        asset.forEach((asset) => {
+        });
+    }
+    /**
+     * Load assets to client
+     * @param {{name: string, path: string} | {name: string, path: string}[]} asset - asset to be loaded;
+     * @param {function} callback - called when loading is finished or interupted
+     * */
+    static load2(asset, callback) {
+        asset = Array.isArray(asset) ? asset : [asset];
+        asset.forEach((asset) => {
+        });
+    }
+    /**
+    * Get asset data by name
+    * @param {string} name - Name of loaded asset
+    * @return {AssetItem} - asset object with
+    * */
+    static get(name) {
+    }
+}
+
+export { Asset, Entity, Game, Input, Sprite, Stage };

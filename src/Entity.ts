@@ -8,16 +8,12 @@ export class Entity {
         this.y = y;
     }
 
-    get loop() {
-        return this._loop;
-    }
-
-    private _loop(_delta) {
+    loop(delta) {
         this.sprite?.render();
-        this.update(_delta);
+        this.update(delta);
     }
 
-    update(_delta) {
+    update(delta) {
 
     }
 

@@ -2,20 +2,21 @@ import {Entity} from "./Entity";
 import {Game} from "./Game";
 
 export class Stage {
+
+    game: Game = null;
+    private _entityList: Entity[] = [];
+    private _needReorder: boolean = false;
+
     constructor() {
     }
 
-    get loop() {
-        return this._loop;
-    }
-
-    private _loop(_delta) {
-        this.update(_delta);
+    loop(delta:number) {
+        this.update(delta);
         if (this._needReorder) {
             this._entityList = this._entityList.sort((a, b) => (a.z > b.z) ? 1 : -1);
         }
         this._entityList.forEach(e => {
-            e.loop(_delta);
+            e.loop(delta);
         });
         if (this.game.debug) {
             const ctx = this.game.ctx;
@@ -31,7 +32,7 @@ export class Stage {
         }
     }
 
-    update(_delta) {
+    update(delta:number) {
     }
 
     add(e: Entity) {
@@ -40,20 +41,13 @@ export class Stage {
         return e;
     }
 
-    remove(e) {
+    remove(e: Entity) {
         this._entityList = this._entityList.filter(c => c != e);
     }
-
-    private _entityList: Entity[] = [];
 
     get entityList() {
         return this._entityList;
     }
-
-    game: Game = null;
-
-    private _needReorder: boolean = false;
-
     reorderZ() {
         this._needReorder = true;
     }
