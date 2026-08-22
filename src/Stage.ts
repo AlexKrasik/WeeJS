@@ -3,21 +3,24 @@ import {Game} from "./Game";
 
 export class Stage {
 
-    game: Game = null;
+    game!: Game;
     private _entityList: Entity[] = [];
     private _needReorder: boolean = false;
 
     constructor() {
     }
 
-    loop(delta:number) {
-        this.update(delta);
+    loop() {
+        this.update();
         if (this._needReorder) {
-            this._entityList = this._entityList.sort((a, b) => (a.z > b.z) ? 1 : -1);
+            this._entityList.sort((a, b) => (a.z > b.z) ? 1 : -1);
+            this._needReorder = false;
         }
+
         this._entityList.forEach(e => {
-            e.loop(delta);
+            e.loop();
         });
+
         if (this.game.debug) {
             const ctx = this.game.ctx;
             this._entityList.forEach(e => {
@@ -32,7 +35,8 @@ export class Stage {
         }
     }
 
-    update(delta:number) {
+    //
+    update() {
     }
 
     add(e: Entity) {
@@ -48,6 +52,7 @@ export class Stage {
     get entityList() {
         return this._entityList;
     }
+
     reorderZ() {
         this._needReorder = true;
     }

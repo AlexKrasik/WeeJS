@@ -8,23 +8,22 @@ export class Entity {
         this.y = y;
     }
 
-    loop(delta) {
+    loop() {
+        this.update();
         this.sprite?.render();
-        this.update(delta);
     }
 
-    update(delta) {
-
+    update() {
     }
 
-    private _sprite: Sprite;
+    private _sprite: Sprite | null = null;
 
     set sprite(s: Sprite) {
         this._sprite = s;
         this._sprite.entity = this;
     }
 
-    get sprite() {
+    get sprite(): Sprite | null {
         return this._sprite;
     }
 
@@ -35,8 +34,8 @@ export class Entity {
      * @param {number} offsetY Y offset of entity hitbox. Use to predict collision
      */
     collide(group: string, offsetX = 0, offsetY = 0) {
-        const result = [];
-        this.stage.entityList.forEach(e => {
+        const result: Entity[] = [];
+        this.stage?.entityList.forEach(e => {
             if (e != this && e.group == group) {
                 if (this.collideWith(e, offsetX, offsetY))
                     result.push(e);
@@ -86,6 +85,10 @@ export class Entity {
         return this._z;
     }
 
+    get delta(): number {
+        return this.stage.game.delta;
+    }
+
     _z: number = 0;
     /**
      * hitbox X position
@@ -114,6 +117,5 @@ export class Entity {
     /**
      *  Stage this entity belongs to
      */
-    stage: Stage;
-
+    stage!: Stage;
 }
