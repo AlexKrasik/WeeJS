@@ -1,16 +1,26 @@
 import {Entity} from "./Entity";
 import {Game} from "./Game";
 
+/**
+ * Scene that holds entities and runs their updates each frame.
+ * Override {@link Stage.update} for stage-level logic.
+ */
 export class Stage {
 
+    /** Game that owns this stage. */
     game!: Game;
     private _entityList: Entity[] = [];
     private _needReorder: boolean = false;
 
+    /** Create an empty stage. */
     constructor() {
     }
 
-    loop() {
+    /**
+     * Called by {@link Game} each frame.
+     * @internal
+     */
+    _loop() {
         this.update();
         if (this._needReorder) {
             this._entityList.sort((a, b) => (a.z > b.z) ? 1 : -1);
@@ -18,7 +28,8 @@ export class Stage {
         }
 
         this._entityList.forEach(e => {
-            e.loop();
+            e.update();
+            e.sprite?._render();
         });
 
         if (this.game.debug) {
@@ -35,25 +46,41 @@ export class Stage {
         }
     }
 
-    //
+    /**
+     * Called every frame before entities update. Override in subclasses for stage logic.
+     */
     update() {
     }
 
+    /**
+     * Add an entity to this stage.
+     * @param e Entity to add
+     * @returns The same entity
+     */
     add(e: Entity) {
         this._entityList.push(e);
         e.stage = this;
         return e;
     }
 
+    /**
+     * Remove an entity from this stage.
+     * @param e Entity to remove
+     */
     remove(e: Entity) {
         this._entityList = this._entityList.filter(c => c != e);
     }
 
+    /** Entities currently on this stage. */
     get entityList() {
         return this._entityList;
     }
 
-    reorderZ() {
+    /**
+     * Mark the entity list for z-order sort before the next frame.
+     * @internal
+     */
+    _reorderZ() {
         this._needReorder = true;
     }
 

@@ -1,9 +1,10 @@
 import type {Stage} from "./Stage";
 import {Input} from "./Input";
 
+/**
+ * Creates the canvas, runs the main loop, and owns the active {@link Stage}.
+ */
 export class Game {
-
-
     private readonly _width: number;
     private readonly _height: number;
     private readonly _canvas: HTMLCanvasElement;
@@ -14,16 +15,17 @@ export class Game {
 
     private _stage: Stage | null = null;
 
+    /** Draw hitboxes and other debug overlays. */
     public debug: boolean = false;
 
     /**
-     * Set up a new game
-     * @param {number} width - Base width of your game.
-     * @param {number} height -Base height of your game.
-     * @param {string} parentSelector - Where game canvas is will be placed in DOM.
+     * Set up a new game and start the render loop.
+     * @param width Canvas width in pixels
+     * @param height Canvas height in pixels
+     * @param parentSelector CSS selector for the canvas parent (falls back to document.body)
      */
     constructor(width: number = 320, height: number = 480, parentSelector: string) {
-        Input.init();
+        Input._init();
 
         // create canvas element
         this._canvas = document.createElement("canvas");
@@ -40,9 +42,9 @@ export class Game {
     }
 
     /**
-     * Main game loop
-     * @param time
-     * @private
+     * Main game loop.
+     * @param time Timestamp from requestAnimationFrame
+     * @internal
      */
     private loop(time: number) {
         this._delta = (time - this._lastFrameTime) / 1000;
@@ -53,35 +55,29 @@ export class Game {
         this.ctx.fillRect(0, 0, this._width, this._height);
 
         // update current stage
-        this.stage?.loop();
+        this.stage?._loop();
 
         // clear inputs data
         Input._clear();
         requestAnimationFrame((time) => this.loop(time));
     }
 
-    /**
-     * Currently active stage
-     */
+    /** Currently active stage. */
+    get stage(): Stage | null {
+        return this._stage;
+    }
+
     set stage(s: Stage) {
         this._stage = s;
         this._stage.game = this;
     }
 
-    get stage(): Stage | null {
-        return this._stage;
-    }
-
-    /**
-     * Time passed since last frame
-     */
+    /** Seconds since the last frame, clamped to a maximum of one frame at 60 FPS. */
     get delta() {
         return Math.min(this._delta, this._maxDelta);
     }
 
-    /**
-     * Canvas 2D context
-     */
+    /** Canvas 2D drawing context. */
     get ctx(): CanvasRenderingContext2D {
         const ctx = this._canvas.getContext("2d");
         if (!ctx) throw new Error("Can't get the canvas context");

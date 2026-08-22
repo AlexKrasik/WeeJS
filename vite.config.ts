@@ -7,7 +7,9 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig({
     plugins: [
-        dts()
+        dts({
+            bundleTypes: true,
+        })
     ],
     build: {
         lib: {

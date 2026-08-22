@@ -1,18 +1,63 @@
 import {Entity} from "./Entity";
 import {Asset} from "./Asset";
 
+/**
+ * Drawable graphic for an {@link Entity}, with optional frame animation.
+ */
 export class Sprite {
+
+    /** Offset X relative to the entity. */
+    x: number = 0;
+    /** Offset Y relative to the entity. */
+    y: number = 0;
+    /** Transformation pivot X. */
+    pivotX: number = 0;
+    /** Transformation pivot Y. */
+    pivotY: number = 0;
+    /** Rotation in degrees. */
+    rotation: number = 0;
+    /** Opacity from 0 to 1. */
+    alpha: number = 1;
+    /** Width of the area filled with the frame texture. */
+    fillWidth: number;
+    /** Height of the area filled with the frame texture. */
+    fillHeight: number;
+    /** Horizontal scale (1 = original size). */
+    scaleX: number = 1;
+    /** Vertical scale (1 = original size). */
+    scaleY: number = 1;
+
+    /** Entity this sprite is attached to. */
+    entity!: Entity;
+    // bitmapData of sprite
+    private _bitmap!: ImageBitmap;
+    // array of frames bitmap
+    private _fA: ImageBitmap[] = [];
+    // sequence of current animation
+    private _aC: number[] = [0]
+    // current animation speed
+    private _aS: number = 1;
+    // current frame index in animation sequence
+    private _aI: number = 0;
+    // time from last frame change
+    private _aT: number = 0;
+    //frame width/height
+    private readonly _fW: number;
+    private readonly _fH: number;
+    // bitmap of current frame in animation sequence
+    private _fB!: ImageBitmap;
+
     /**
-     * Class for all graphics that can be drawn by Entity.
-     * @param {string} asset image name
-     * @param {number} width width of single animation frame. null - for whole image width
-     * @param {number} height height of single animation frame. null - for whole image height
-     * @param {number} x start x position to clip from source image
-     * @param {number} y start y position to clip from source image
-     * @param {number} [cropWidth] width of rectangle to clip from source image. null - for whole image width
-     * @param {number} [cropHeight] height of rectangle to clip from source image. null - for whole image height
+     * Create a sprite from a preloaded image.
+     * @param asset Image name from {@link Asset.load}
+     * @param width Width of one animation frame; 0 uses the full image width
+     * @param height Height of one animation frame; 0 uses the full image height
+     * @param x Start X when clipping from the source image
+     * @param y Start Y when clipping from the source image
+     * @param cropWidth Width to clip; 0 uses the rest of the image
+     * @param cropHeight Height to clip; 0 uses the rest of the image
      */
-    constructor(asset: string, width: number, height: number, x: number = 0, y: number = 0, cropWidth?: number, cropHeight?: number) {
+    constructor(asset: string, width: number = 0, height: number = 0, x: number = 0, y: number = 0, cropWidth: number = 0, cropHeight: number = 0) {
         const srcBitmap = Asset.getImage(asset);
 
         cropWidth = cropWidth || srcBitmap.width - x;
@@ -27,6 +72,10 @@ export class Sprite {
         });
     }
 
+    /**
+     * Slice the spritesheet into frames.
+     * @internal
+     */
     private async _cacheFrames() {
         const rowCount = (this._bitmap.height - (this._bitmap.height % this._fH)) / this._fH;
         const colCount = (this._bitmap.width - (this._bitmap.width % this._fW)) / this._fW;
@@ -42,8 +91,11 @@ export class Sprite {
         this._fB = this._fA[0];
     }
 
-
-    render() {
+    /**
+     * Draw the current frame to the game canvas.
+     * @internal
+     */
+    _render() {
         this._updateFrame();
         const ctx = this.entity.stage.game.ctx;
         ctx.save();
@@ -74,20 +126,9 @@ export class Sprite {
     }
 
     /**
-     * Play animation sequence
-     * @param {number[]} animation sequence of frames
-     * @param {number} speed animation speed (frames per second)
-     * @param {boolean} force should animation start over if already playing
+     * Advance the animation frame if needed.
+     * @internal
      */
-    play(animation = [0], speed = 1, force = false) {
-        if (animation != this._aC || force) {
-            this._aC = animation;
-            this._aT = performance.now();
-            this._aS = speed;
-            this._aI = 0;
-        }
-    }
-
     private _updateFrame() {
         const time = performance.now() - this._aT;
         if (time > 1000 / this._aS) {
@@ -97,62 +138,18 @@ export class Sprite {
         this._fB = this._fA[this._aC[this._aI]];
     }
 
-    // entity this sprite assigned to
-    entity!: Entity;
-    // bitmapData of sprite
-    private _bitmap!: ImageBitmap;
-    // array of frames bitmap
-    private _fA: ImageBitmap[] = [];
-    // sequence of current animation
-    private _aC: number[] = [0]
-    // current animation speed
-    private _aS: number = 1;
-    // current frame index in animation sequence
-    private _aI: number = 0;
-    // time from last frame change
-    private _aT: number = 0;
-    //frame width/height
-    private readonly _fW: number;
-    private readonly _fH: number;
-    // bitmap of current frame in animation sequence
-    private _fB!: ImageBitmap;
-
-
     /**
-     * X position
+     * Play an animation sequence.
+     * @param animation Frame indices, e.g. `[0, 1, 2]`
+     * @param speed Frames per second
+     * @param force Restart even if the same sequence is already playing
      */
-    x: number = 0;
-    /**
-     * Y position
-     */
-    y: number = 0;
-    /**
-     * X position of transformation pivot point
-     */
-    pivotX: number = 0;
-    /**
-     * Y position of transformation pivot point
-     */
-    pivotY: number = 0;
-    /**
-     * Image rotation;
-     */
-    rotation: number = 0;
-    /**
-     * Sprite transparency
-     */
-    alpha: number = 1;
-    /**
-     * Width of rectangle to be filled with texture
-     */
-    fillWidth: number;
-    /**
-     * Height of rectangle to be filled with texture
-     */
-    fillHeight: number;
-    // Horizontal scale of image (1 - original)
-    scaleX: number = 1;
-    // Vertical scale of image (1 - original)
-    scaleY: number = 1;
-
+    play(animation: number[] = [0], speed: number = 1, force: boolean = false) {
+        if (animation != this._aC || force) {
+            this._aC = animation;
+            this._aT = performance.now();
+            this._aS = speed;
+            this._aI = 0;
+        }
+    }
 }
