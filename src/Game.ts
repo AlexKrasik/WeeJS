@@ -12,6 +12,9 @@ export class Game {
     private _delta: number = 0;
     private _maxDelta: number = 1 / 60;
     private _lastFrameTime: number = 0;
+    /** Last raw frame deltas (seconds) for smoothed FPS in debug. */
+    private _deltas: number[] = [];
+    private static readonly _deltaSamples = 10;
 
     private _stage: Stage | null = null;
 
@@ -49,6 +52,8 @@ export class Game {
     private loop(time: number) {
         this._delta = (time - this._lastFrameTime) / 1000;
         this._lastFrameTime = time;
+        this._deltas.push(this._delta);
+        if (this._deltas.length > Game._deltaSamples) this._deltas.shift();
 
         //clear canvas
         this.ctx.fillStyle = "#111";
@@ -75,6 +80,20 @@ export class Game {
     /** Seconds since the last frame, clamped to a maximum of one frame at 60 FPS. */
     get delta() {
         return Math.min(this._delta, this._maxDelta);
+    }
+
+    /** Average of recent raw frame deltas in seconds. */
+    get avgDelta(): number {
+        if (this._deltas.length === 0) return 0;
+        let sum = 0;
+        for (const d of this._deltas) sum += d;
+        return sum / this._deltas.length;
+    }
+
+    /** Smoothed FPS from the last 10 raw frame deltas. */
+    get fps(): number {
+        const avg = this.avgDelta;
+        return avg > 0 ? 1 / avg : 0;
     }
 
     /** Canvas 2D drawing context. */

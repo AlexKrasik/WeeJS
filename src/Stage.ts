@@ -43,6 +43,15 @@ export class Stage {
                 ctx.strokeStyle = "#00DDFF";
                 ctx.strokeRect(Math.floor(e.x) - .5, Math.floor(e.y) - .5, 2, 2);
             });
+
+            // performance (smoothed over last frames)
+            ctx.fillStyle = "#0006";
+            ctx.fillRect(0, 0, 80, 30);
+
+            ctx.fillStyle = "#FFF";
+            ctx.font = "10px monospace";
+            ctx.fillText(`fps: ${Math.round(this.game.fps)}`, 8, 12);
+            ctx.fillText(`frame: ${Math.round(this.game.avgDelta * 1000)}ms`, 8, 24);
         }
     }
 
