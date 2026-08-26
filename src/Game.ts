@@ -28,17 +28,21 @@ export class Game {
      * @param parentSelector CSS selector for the canvas parent (falls back to document.body)
      */
     constructor(width: number = 320, height: number = 480, parentSelector: string) {
-        Input._init();
 
         // create canvas element
         this._canvas = document.createElement("canvas");
         this._canvas.width = this._width = width;
         this._canvas.height = this._height = height;
         this._canvas.style.imageRendering = "pixelated";
+        this._canvas.oncontextmenu = (e) => e.preventDefault();
 
         // add canvas to DOM
         const parentEl = document.querySelector(parentSelector) || document.body;
         parentEl.append(this._canvas);
+
+        // init Input listeners
+        Input._init(this._canvas);
+
 
         // start main loop
         requestAnimationFrame((time) => this.loop(time));
