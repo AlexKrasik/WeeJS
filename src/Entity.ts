@@ -1,5 +1,6 @@
 import {Stage} from "./Stage";
 import {Sprite} from "./Sprite";
+import {Game} from "./Game";
 
 /**
  * Basic game object with position, hitbox, and optional sprite.
@@ -20,10 +21,10 @@ export class Entity {
     height: number = 0;
     /** Collision group name used by {@link Entity.collide}. */
     group: string = '';
-    /** Hitbox outline color when {@link Game.debug} is on. */
-    hitboxColor: string = "#FFF"
     /** Stage this entity belongs to. */
     stage!: Stage;
+    /** Draw position and hitbox in debug mode*/
+    drawDebug = true;
 
     private _z: number = 0;
     private _sprite: Sprite | null = null;
@@ -93,7 +94,21 @@ export class Entity {
         return (l1 <= r2 && l2 <= r1 && t1 <= b2 && t2 <= b1);
     }
 
-    /** Draw order; lower values render first. */
+    /**
+     * Check overlap with a point.
+     * @param x of a point
+     * @param y of a point
+     * @returns True if point is in hitbox
+     */
+    collidePoint(x: number = 0, y: number = 0) {
+        const l = this.x + this.originX;
+        const r = this.x + this.originX + this.width;
+        const t = this.y + this.originY;
+        const b = this.y + this.originY + this.height;
+        return x >= l && x <= r && y >= t && y <= b;
+    }
+
+    /** Render order; lower values render first. */
     get z() {
         return this._z;
     }
@@ -105,7 +120,27 @@ export class Entity {
 
     /** Seconds since the last frame (from {@link Game.delta}). */
     get delta(): number {
-        return this.stage.game.delta;
+        return this.stage?.game.delta;
+    }
+
+    /** Game instance */
+    get game(): Game {
+        return this.stage?.game;
+    }
+
+    /** Render hitbox of the entity */
+    _drawHitbox() {
+        if (!this.drawDebug) return;
+
+        const ctx = this.stage.game.ctx;
+        const cam = this.stage.camera;
+
+        ctx.strokeStyle = "#FFFFFF";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(Math.floor(this.x + cam.x) + .5 + this.originX, Math.floor(this.y + cam.y) + .5 + this.originY, this.width, this.height);
+        // entity position
+        ctx.strokeStyle = "#00DDFF";
+        ctx.strokeRect(Math.floor(this.x + cam.x) - .5, Math.floor(this.y + cam.y) - .5, 2, 2);
     }
 
 }

@@ -10,7 +10,7 @@ export class Game {
     private readonly _canvas: HTMLCanvasElement;
 
     private _delta: number = 0;
-    private _maxDelta: number = 1 / 60;
+    private _maxDelta: number = 1 / 30;
     private _lastFrameTime: number = 0;
     /** Last raw frame deltas (seconds) for smoothed FPS in debug. */
     private _deltas: number[] = [];
@@ -21,19 +21,34 @@ export class Game {
     /** Draw hitboxes and other debug overlays. */
     public debug: boolean = false;
 
+    private _pixelPerfect: boolean = true;
+    public get pixelPerfect(): boolean {
+        return this._pixelPerfect;
+    }
+
+    public set pixelPerfect(value: boolean) {
+        if (value) {
+            this._canvas.style.imageRendering = "crisp-edges";
+        } else {
+            this._canvas.style.imageRendering = "smooth";
+        }
+        this.ctx.imageSmoothingEnabled = !value;
+        this._pixelPerfect = value;
+    }
+
     /**
      * Set up a new game and start the render loop.
      * @param width Canvas width in pixels
      * @param height Canvas height in pixels
      * @param parentSelector CSS selector for the canvas parent (falls back to document.body)
      */
-    constructor(width: number = 320, height: number = 480, parentSelector: string) {
+    constructor(width: number = 320, height: number = 240, parentSelector: string) {
 
         // create canvas element
         this._canvas = document.createElement("canvas");
         this._canvas.width = this._width = width;
         this._canvas.height = this._height = height;
-        this._canvas.style.imageRendering = "pixelated";
+        this.pixelPerfect = this._pixelPerfect;
         this._canvas.oncontextmenu = (e) => e.preventDefault();
 
         // add canvas to DOM
@@ -60,7 +75,7 @@ export class Game {
         if (this._deltas.length > Game._deltaSamples) this._deltas.shift();
 
         //clear canvas
-        this.ctx.fillStyle = "#111";
+        this.ctx.fillStyle = "#3296ff";
         this.ctx.fillRect(0, 0, this._width, this._height);
 
         // update current stage
@@ -69,6 +84,16 @@ export class Game {
         // clear inputs data
         Input._clear();
         requestAnimationFrame((time) => this.loop(time));
+    }
+
+    /** Game screen width */
+    get width(): number {
+        return this._width;
+    }
+
+    /** Game screen height */
+    get height(): number {
+        return this._height;
     }
 
     /** Currently active stage. */

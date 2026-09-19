@@ -69,27 +69,38 @@ export class Sound {
      * @param loop If true, repeat until stopped
      */
     play(force: boolean = false, loop: boolean = false): void {
-        if (force) this.stop();
-        else if (this._sourceNode) return; // If buffer exists - sound is playing
+        if (force) {
+            this.stop();
+            console.log('force')
+        } else if (this._sourceNode) return; // If buffer exists - sound is playing
 
         this._startTime = Sound.ctx.currentTime;
         this._sourceNode = Sound.ctx.createBufferSource();
         this._sourceNode.loop = loop;
         this._sourceNode.buffer = this._audioBuffer;
         this._sourceNode.connect(this._gainNode);
+        this._sourceNode.addEventListener('ended', this._onEnded);
         this._sourceNode.start();
-        this._sourceNode.addEventListener('ended', () => this.stop());
     }
 
     /** Stop playback immediately. */
     stop(): void {
+        // nothing is playing - exit
         if (!this._sourceNode) return;
+
+        // remove old event listener
+        this._sourceNode.removeEventListener('ended', this._onEnded);
 
         try {
             this._sourceNode.stop();
         } catch (e) {
             console.error(e)
         }
+
         this._sourceNode = null;
     }
+
+    private _onEnded = () => {
+        this._sourceNode = null;
+    };
 }

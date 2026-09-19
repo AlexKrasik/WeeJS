@@ -1,3 +1,4 @@
+import {Sprite} from "./Sprite";
 import {Entity} from "./Entity";
 import {Game} from "./Game";
 
@@ -8,7 +9,8 @@ import {Game} from "./Game";
 export class Stage {
 
     /** Game that owns this stage. */
-    game!: Game;
+    public game!: Game;
+    public camera: { x: number, y: number } = {x: 0, y: 0};
     private _entityList: Entity[] = [];
     private _needReorder: boolean = false;
 
@@ -34,15 +36,9 @@ export class Stage {
 
         if (this.game.debug) {
             const ctx = this.game.ctx;
-            this._entityList.forEach(e => {
-                //entity hitbox
-                ctx.strokeStyle = e.hitboxColor;
-                ctx.lineWidth = 1;
-                ctx.strokeRect(Math.floor(e.x) + .5 + e.originX, Math.floor(e.y) + .5 + e.originY, e.width, e.height);
-                // entity position
-                ctx.strokeStyle = "#00DDFF";
-                ctx.strokeRect(Math.floor(e.x) - .5, Math.floor(e.y) - .5, 2, 2);
-            });
+
+            // draw hitboxes
+            this._entityList.forEach(e => e._drawHitbox());
 
             // performance (smoothed over last frames)
             ctx.fillStyle = "#0006";
@@ -78,6 +74,22 @@ export class Stage {
      */
     remove(e: Entity) {
         this._entityList = this._entityList.filter(c => c != e);
+    }
+
+    /**
+     * Create and position Entity with Sprite.
+     * @param sprite Sprite to add on Stage
+     * @param x X position on the Stage
+     * @param y Y position on the Stage
+     * @param z Render order; lower values render first
+     * */
+    addSprite(sprite: Sprite, x: number = 0, y: number = 0, z: number = 0) {
+        const e = new Entity(x, y);
+        this.add(e);
+        e.sprite = sprite;
+        e.z = z;
+        e.drawDebug = false;
+        return e;
     }
 
     /** Entities currently on this stage. */

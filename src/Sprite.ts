@@ -26,6 +26,8 @@ export class Sprite {
     scaleX: number = 1;
     /** Vertical scale (1 = original size). */
     scaleY: number = 1;
+    /** Overall scale (1 = original size). Independent of scaleX and scaleY */
+    scale: number = 1;
 
     /** Entity this sprite is attached to. */
     entity!: Entity;
@@ -101,23 +103,29 @@ export class Sprite {
         ctx.save();
 
         if (this._fB) {
+            const camera = this.entity.stage.camera;
+
+            // position on Stage with camera offset
+            const sX = this.entity.x + this.x + camera.x + this.pivotX
+            const sY = this.entity.y + this.y + camera.y + this.pivotY
+
             // renderPoint
-            const rX = Math.round(this.entity.x + this.x - this.pivotX);
-            const rY = Math.round(this.entity.y + this.y - this.pivotY);
+            const rX = this.entity.stage.game.pixelPerfect ? Math.round(sX) : sX;
+            const rY = this.entity.stage.game.pixelPerfect ? Math.round(sY) : sY;
 
             ctx.translate(rX, rY);
 
             if (this.rotation != 0) ctx.rotate((this.rotation * Math.PI) / 180);
             if (this.alpha != 1) ctx.globalAlpha = this.alpha;
-            if (this.scaleX != 1 || this.scaleY != 1) ctx.scale(this.scaleX, this.scaleY);
+            if (this.scaleX != 1 || this.scaleY != 1 || this.scale != 1) ctx.scale(this.scaleX * this.scale, this.scaleY * this.scale);
             // render or fill area with frame
             if (this.fillWidth == this._fW && this.fillHeight == this._fH) {
-                ctx.drawImage(this?._fB, this.pivotX, this.pivotY);
+                ctx.drawImage(this?._fB, -this.pivotX, -this.pivotY);
             } else {
                 const pattern = ctx.createPattern(this._fB, 'repeat');
                 if (pattern) {
                     ctx.fillStyle = pattern;
-                    ctx.fillRect(this.pivotX, this.pivotY, this.fillWidth, this.fillHeight);
+                    ctx.fillRect(-this.pivotX, -this.pivotY, this.fillWidth, this.fillHeight);
                 }
             }
         }
@@ -145,7 +153,7 @@ export class Sprite {
      * @param force Restart even if the same sequence is already playing
      */
     play(animation: number[] = [0], speed: number = 1, force: boolean = false) {
-        if (animation != this._aC || force) {
+        if (animation.toString() !== this._aC.toString() || force) {
             this._aC = animation;
             this._aT = performance.now();
             this._aS = speed;
